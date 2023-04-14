@@ -4,8 +4,10 @@ import { Todo } from '../../../../types'
 //Create Dummy Data URL
 const DATA_SOURCE = "https://jsonplaceholder.typicode.com/todos";
 
-//Create async GET function to fetch data from the dummy data URL
+//Dummy API Key to prevent unauthorized access
+const API_KEY: string = process.env.DATA_API_KEY as string
 
+//Create async GET function to fetch data from the dummy data URL
 export async function GET(req:NextRequest, res: NextResponse) {
 
         //wrapped in try catch block to catch any errors
@@ -33,3 +35,25 @@ export async function GET(req:NextRequest, res: NextResponse) {
         }
 
 }
+
+export async function DELETE(req:NextRequest, res: NextResponse) {
+    const id: Partial<Todo> =await req.json();
+
+    if (!id) {
+        return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+    }
+
+    await fetch(`${DATA_SOURCE}/${id}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            'API_KEY': API_KEY,
+            //prevent CORS error
+            "Access-Control-Allow-Origin": "*",
+        },
+    });
+
+    return NextResponse.json({ message: "Todo deleted" }, { status: 200 });
+
+}
+
