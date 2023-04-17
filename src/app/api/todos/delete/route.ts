@@ -33,7 +33,7 @@ export async function DELETE(req:NextRequest, res: NextResponse) {
             },
         });
     
-        return NextResponse.json({ message: "Todo deleted" }, { status: 200 });
+        return NextResponse.json({ message: `Todo ${id} deleted` }, { status: 200 });
 
     } catch(error){
 
@@ -43,3 +43,4 @@ export async function DELETE(req:NextRequest, res: NextResponse) {
     }
 
 }
+
