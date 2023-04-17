@@ -14,7 +14,6 @@ const DATA_SOURCE = "https://jsonplaceholder.typicode.com/todos";
 //Dummy API Key to prevent unauthorized access
 const API_KEY: string = process.env.DATA_API_KEY as string
 
-
     // POST function to create new toDO
     export async function POST(req:NextRequest, res: NextResponse) {
 
