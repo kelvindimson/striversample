@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Todo } from '../../../../types'
+import db from './../../dbConnection'
+
 //import params
 
 interface ParamsRequest extends NextRequest {
