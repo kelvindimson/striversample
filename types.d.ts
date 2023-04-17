@@ -1,8 +1,8 @@
 //create a todo types
 export interface Todo {
-    userId?: number;
-    id: number;
+    id: string;
     title: string;
-    description: string;
     completed: boolean;
+    created_at: date;
+    updated_at: date;
 }

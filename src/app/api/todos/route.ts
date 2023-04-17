@@ -1,186 +1,227 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Todo } from '../../../../types'
-import db from './../../dbConnection'
+import sqlite3 from 'sqlite3';
+import { v4 as uuidv4 } from 'uuid';
 
-//import params
+import path from 'path';
 
-interface ParamsRequest extends NextRequest {
-    params: {
-      id: string;
-    };
- }
+//bring in database
+const dbPath = path.resolve(process.cwd(), 'todo.db');
 
-//Create Dummy Data URL
-const DATA_SOURCE = "https://jsonplaceholder.typicode.com/todos";
-
-//Dummy API Key to prevent unauthorized access
-const API_KEY: string = process.env.DATA_API_KEY as string
-
-    // POST function to create new toDO
-    export async function POST(req:NextRequest, res: NextResponse) {
-
-        //try catch block to catch any errors
-        try{
-            if (req.method !== "POST") {
-                //return the error with the status code 405
-                return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-            }
-
-            const { userId, title }: Partial<Todo> = await req.json();
-            //Keep the Error Specific for better user experience
-
-            //check if there is title but no userID
-            if (!userId && (title ?? '').length > 0) {
-                return NextResponse.json({ error: "Missing usserID" }, { status: 400 });
-            }
-
-            //check if there is userID but no title
-            if (!title && (userId ?? 0) > 0) {
-                return NextResponse.json({ error: "Missing Title" }, { status: 400 });
-            }
-
-            //check if there is no userID and no title
-            if (!userId && !title) {
-                return NextResponse.json({ error: "Missing ID and Title" }, { status: 400 });
-            }
-        
-            const res = await fetch(DATA_SOURCE, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    'API_KEY': API_KEY,
-                    //prevent CORS error
-                    "Access-Control-Allow-Origin": "*",
-                },
-                body: JSON.stringify({
-                    userId, title, completed: false
-                })
-            })
-
-            const newTodo: Todo = await res.json();
-        
-            return NextResponse.json({ message: "Todo Created Succesfully" }, { status: 200 });
-
-        } catch(error){
-            //return the error with the status code 500
-            return NextResponse.json(error, { status: 500});
-        }
-
+//check if the database exists
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error(err.message);
     }
+    console.log('Connected to the todo database.');
+});
 
-    //GET function to fetch All toDos
-    export async function GET(req:NextRequest, res: NextResponse) {
 
-        //wrapped in try catch block to catch any errors
-        try {
-            if (req.method !== "GET") {
-                    //return the error with the status code 405
-                    return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+//POST endpoint to create a new todo
+export async function POST(req: NextRequest, res: NextResponse) {
 
-                    } else {
-                    //await for the response from the fetch function
-                    const res = await fetch(DATA_SOURCE);
+    //try catch block to catch any errors
+    try {
+        if (req.method !== "POST") {
+            //return the error with the status code 405
+            return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+        }
+        const { title }: Partial<Todo> = await req.json();
+
+        if (!title) {
+            //return the error with the status code 400
+            return NextResponse.json({ Message: "Add a title" }, { status: 400 });
+        } else {
+
+            // Generate a new UUID for the todo ID
+            const id: string = uuidv4();
+
+            // Get the current timestamp
+            const timestamp: number = Date.now();
+    
+            // Open a connection to the SQLite database
+            const db = new sqlite3.Database(dbPath);
+
+            //insert the new todo into the database
+            const addSQL = `INSERT INTO todos (id, title, completed, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`;
+
+            //Await the promise to resolve before closing the database connection
+            await new Promise<void>((resolve, reject) => {
+
+            db.run(addSQL, [id, title, 0, new Date(timestamp).toISOString(), new Date(timestamp).toISOString()], function(err) {
+                if (err) {
+                    console.error(err.message);
+                    reject(err);
+                    }
+                     resolve();
+                 });
                         
-                    const todo: Todo[] = await res.json();
-                            
-                    //return the response as JSON with the status code 200
-                    return NextResponse.json(todo, { status: 200});
-
-                 }
-
-        } catch(error) {
-
-            //return the error with the status code 500
-            return NextResponse.json(error, { status: 500});
-
-            }
-    }
-
-    // PUT function to update toDo by ID
-    export async function PUT(req:NextRequest, res: NextResponse) {
-
-        //try catch block to catch any errors
-        try {
-            if (req.method !== "PUT") {
-                //return the error with the status code 405
-                return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-            }
-
-            const { userId, id, title, completed }: Todo = await req.json();
-
-            //check if there is no userID and no title
-            if (!userId || !title || !id || typeof(completed) !== 'boolean') {
-                return NextResponse.json({ error: "Missing required data" }, { status: 400 });
-            }
-        
-            const res = await fetch(`${DATA_SOURCE}/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    'API_KEY': API_KEY,
-                    //prevent CORS error
-                    "Access-Control-Allow-Origin": "*",
-                },
-                body: JSON.stringify({
-                    userId, title, completed
-                })
-            })
-
-            const updatedTodo: Todo = await res.json();
-        
-            return NextResponse.json({ 
-                todo: updatedTodo,
-                message: `Todo ${id} Updated Successfully`,
-                success: true,
-                status: 200
-                });
-
-        } catch(error){
-            //return the error with the status code 500
-            return NextResponse.json({ 
-                message: error,
-                status: 400,
-                success: false
             });
+                
+             //construct the new todo object to return
+             const newTodo: Todo = {
+                id: id,
+                title: title,
+                completed: false,
+                created_at: new Date(timestamp),
+                updated_at: new Date(timestamp)
+                };
+
+                    console.log(newTodo)
+
+                    //close the database connection after the query is run
+                    db.close();
+
+                    //return the new todo object
+                    return NextResponse.json(newTodo);
+
+        }
+    } catch (error) {
+        return NextResponse.json({
+            status: 400,
+            message: error,
+            success: false });
+    }
+}
+
+// GET endpoint to fetch all todos
+export async function GET(req: NextRequest, res: NextResponse) {
+
+    // Try catch block to catch any errors
+    try {
+        if (req.method !== "GET") {
+            // Return the error with the status code 405
+            return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
         }
 
-    }
+        // Open a connection to the SQLite database
+        const db = new sqlite3.Database(dbPath);
 
-    // DELETE function to delete toDo by ID
-    export async function DELETE(req:NextRequest, res: NextResponse) {
+        // SQL query to fetch all todos from the database
+        const fetchSQL = `SELECT * FROM todos`;
 
-        //try catch block to catch any errors
-        try{
-            if (req.method !== "DELETE") {
-                //return the error with the status code 405
-                return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-            }
-
-            const { id }: Partial<Todo> = await req.json();
-            
-            if (!id) {
-                return NextResponse.json({ error: "Missing Todo Id" }, { status: 400 });
-            }
-        
-            await fetch(`${DATA_SOURCE}/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    'API_KEY': API_KEY,
-                    //prevent CORS error
-                    "Access-Control-Allow-Origin": "*",
-                },
+        // Await the promise to resolve before closing the database connection
+        const todos: Todo[] = await new Promise<Todo[]>((resolve, reject) => {
+            db.all(fetchSQL, [], (err, rows) => {
+                if (err) {
+                    console.error(err.message);
+                    reject(err);
+                }
+                resolve(rows as Todo[]);
             });
-        
-            return NextResponse.json({ message: `Todo ${id} deleted` }, { status: 200 });
+        });
 
-            } catch(err) {
+        // Close the database connection after the query is run
+        db.close();
 
-                //return the error with the status code 500
-                return NextResponse.json(err, { status: 500});
-            }
+        // Return the todos array
+        return NextResponse.json(todos);
 
-
-
+    } catch (error) {
+        return NextResponse.json({
+            status: 400,
+            message: error,
+            success: false
+        });
     }
+}
 
+// DELETE endpoint to delete a todo by ID
+export async function DELETE(req: NextRequest, res: NextResponse) {
+    try {
+        if (req.method !== "DELETE") {
+            return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+        }
+
+        const { id }: Partial<Todo> = await req.json();
+
+        if (!id) {
+            return NextResponse.json({ Message: "ID is required" }, { status: 400 });
+        }
+
+        const db = new sqlite3.Database(dbPath);
+        const deleteSQL = `DELETE FROM todos WHERE id = ?`;
+
+        await new Promise<void>((resolve, reject) => {
+            db.run(deleteSQL, [id], function (err) {
+                if (err) {
+                    console.error(err.message);
+                    reject(err);
+                }
+                resolve();
+            });
+        });
+
+        db.close();
+
+        return NextResponse.json({ message: "Todo deleted successfully" });
+    } catch (error) {
+        return NextResponse.json({
+            status: 400,
+            message: error,
+            success: false
+        });
+    }
+}
+
+// UPDATE endpoint to update a todo by ID
+export async function PUT(req: NextRequest, res: NextResponse) {
+    try {
+        if (req.method !== "PUT") {
+            return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+        }
+
+        const { id, title, completed }: Partial<Todo> = await req.json();
+
+        if (!id) {
+            return NextResponse.json({ Message: "ID is required" }, { status: 400 });
+        }
+
+        const db = new sqlite3.Database(dbPath);
+
+        const updateSQL = `UPDATE todos
+                           SET title = COALESCE(?, title),
+                               completed = COALESCE(?, completed),
+                               updated_at = ?
+                           WHERE id = ?`;
+
+        const timestamp = new Date().toISOString();
+
+        await new Promise<void>((resolve, reject) => {
+            db.run(updateSQL, [title, completed, timestamp, id], function (err) {
+                if (err) {
+                    console.error(err.message);
+                    reject(err);
+                }
+                resolve();
+            });
+        });
+
+        const fetchSQL = `SELECT * FROM todos WHERE id = ?`;
+
+        const updatedTodo: Todo = await new Promise<Todo>((resolve, reject) => {
+            db.get(fetchSQL, [id], (err, row) => {
+                if (err) {
+                    console.error(err.message);
+                    reject(err);
+                }
+                resolve(row as Todo);
+            });
+        });
+
+        db.close();
+
+    return NextResponse.json(updatedTodo);
+
+    } catch (error) {
+
+        return NextResponse.json({
+            status: 400,
+            message: error,
+            success: false
+        });
+        
+    }
+}
+
+    
