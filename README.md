@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Striver - Todo App
 
-## Getting Started
+Striver is a simple yet powerful Todo application built using React, Next.js, and Tailwind CSS. It helps users manage their tasks and stay organized by adding, editing, and deleting tasks.
 
-First, run the development server:
+##Features
+
+- Add tasks
+- Edit tasks
+- Delete tasks
+- Mark tasks as completed
+- Responsive design
+
+
+
+## Installation
+
+To install the necessary dependencies, run the following command in your terminal:
+
+```bash
+npm install
+```
+
+## Usage
+
+To run the application in development mode, use the following command:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then, open your browser and navigate to http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Components
 
-[http://localhost:3000/api/hello](http://localhost:3000/api/hello) is an endpoint that uses [Route Handlers](https://beta.nextjs.org/docs/routing/route-handlers). This endpoint can be edited in `app/api/hello/route.ts`.
+The main component that handles the rendering of the todo list, modals, and other sub-components. It manages the state of todos and handles interactions such as adding, editing, completing, and deleting tasks.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Dependencies
 
-## Learn More
+- Sqlite3: For Database
+- react: For building the UI components
+- nextjs 13: For server-rendering and routing
+- tailwindcss: For styling the components
+- @formkit/auto-animate/react: For animating the todo list
+- react-hot-toast: For displaying toast notifications
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
 
-## Deploy on Vercel
+Please make sure to update tests as appropriate.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+[MIT](https://choosealicense.com/licenses/mit/)
