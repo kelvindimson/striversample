@@ -8,7 +8,7 @@ import Modal from './modal/Modal';
 import toast, { Toaster } from 'react-hot-toast';
 import Image from 'next/image';
 
-export interface Todo {
+interface Todo {
   id: string;
   title: string;
   completed: boolean;
@@ -207,9 +207,6 @@ useEffect(() => {
   fetchTodos();
 
 }, []);
-
-
-
 
 
 //delete todo
