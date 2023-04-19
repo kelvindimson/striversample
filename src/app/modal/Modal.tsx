@@ -2,6 +2,7 @@ import { title } from "process";
 import { useState } from "react";
 
 interface ModalProps {
+    id?: string;
     title: string;
     isOpen: boolean;
     onClose: () => void;
@@ -39,7 +40,7 @@ const Modal: React.FC<ModalProps> = ({ title, isOpen, onClose, isClicked, childr
         className={`duration-500 ease-in-out; ${isOpen ? "fixed top-0 left-0 w-full h-full flex items-center justify-center z-50 visible transform" : " invisible " }`}
            >
 
-        <div className={`transition duration-150 ease-in-out ${isOpen ? "w-4/5 bg-white rounded-lg z-50 overflow-hidden scale-100 p-6 lg:w-[600px] md:w-3/4 sm:w-4/5" : "scale-0" }`}
+        <div className={`transition duration-150 ease-in-out ${isOpen ? "w-4/5 bg-white rounded-lg z-50 overflow-hidden scale-100 p-2 lg:p-6 md:p-4 sm:p-2 lg:w-[600px] md:w-3/4 sm:w-4/5" : "scale-0" }`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-title"

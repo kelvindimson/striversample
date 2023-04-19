@@ -5,6 +5,8 @@ import React, {useEffect, useState, useRef } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { NextRouter, useRouter } from 'next/router';
 import Modal from '../modal/Modal';
+import toast, { Toaster } from 'react-hot-toast';
+import Image from 'next/image';
 
 export interface Todo {
   id: string;
@@ -19,8 +21,11 @@ const [loading , setLoading] = useState(true)
 const [todos, setTodos] = useState<Todo[]>([]);
 const [empty, setEmpty] = useState('');
 const [isModalOpen, setIsModalOpen] = useState(false);
+const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
 const todoRef = useRef<HTMLInputElement>(null);
+const editRef = useRef<HTMLInputElement>(null);
+
 
 
 //Fetch todos from API
@@ -77,12 +82,22 @@ const clickAddTodo = async (event: React.KeyboardEvent<HTMLInputElement> | React
     //Clear empty state
     setEmpty('');
 
-    fetchTodos();
+    const updatedTodos = async () => {
+  
+      const response = await fetch('/api/todos');
+      const newtodos = await response.json();
+      setTodos(newtodos);
+
+    }
+
+    updatedTodos();
 
     handleCloseModal();
 
     //clear input
     setTimeout(() => {
+      toast.success('Todo added!');
+
       if(todoRef.current) {
         todoRef.current.value = '';
       }
@@ -108,10 +123,19 @@ const enterAddTodo = async (event: React.KeyboardEvent<HTMLInputElement> ) => {
 
     handleCloseModal();
 
-    fetchTodos();
+    const updatedTodos = async () => {
+  
+      const response = await fetch('/api/todos');
+      const newtodos = await response.json();
+      setTodos(newtodos);
+
+    }
+
+    updatedTodos();
+
 
     setTimeout(() => {
-
+      toast.success('Todo added!');
     if (event.currentTarget) {
         event.currentTarget.value = ' ';
     }
@@ -151,6 +175,24 @@ const handleCloseModal = () => {
   // console.log('close modal')
 };
 
+//open edit modal
+const OpenEditModal = () => {
+  setIsEditModalOpen(true);
+  // console.log('open edit modal')
+};
+
+const CloseEditModal = () => {
+  setIsEditModalOpen(false);
+  // console.log('close edit modal')
+};
+
+//closeedit modal on esc
+const handleEditModalClose = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  if (event.key === 'Escape') {
+    CloseEditModal();
+}};
+
+
 
 
 // const handleOpenTodoModal = () => {
@@ -166,12 +208,10 @@ const handleCloseModal = () => {
 
 //focus on input
 const handleFocus = () => {
-
   //check to make sure the input is not null
   if(todoRef.current) {
     todoRef.current.focus();
   }
-
 }
 
 
@@ -201,7 +241,148 @@ const deleteTodo = async (id: string) => {
   //fetch todos again to update the UI in the background
   fetchTodos();
 
+  toast.success('Todo Deleted!');
+
 };
+
+//edit todo
+const editTodo = async (id: string, title: string) => {
+
+  await fetch(`/api/todos`, {
+    method: 'PUT',
+    // Adding headers
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    // Adding body or contents to send
+    body: JSON.stringify({
+      id,
+      title,
+    }),
+
+  });
+};
+
+//Open modal to edit todo
+const handleOpenEditModal = async (id: string, title: string) => {
+
+  //make sure to open the modal first
+    new Promise<void>((resolve, reject) => {
+      setIsEditModalOpen(true);
+      resolve();
+    }).then(() => {
+
+      //display the todo ID in a separate element
+      if (editRef.current) {
+        editRef.current.innerText = `${id}`;
+      }
+
+      //show the todo title in the input
+      if (todoRef.current) {
+        todoRef.current.value = `${title}`;
+      }
+
+  //then focus on the input for good user experience
+    setTimeout(() => {
+      handleFocus();
+      console.log('focus')
+      
+    }, 100)
+
+    })
+
+}
+
+//Handle edit todo
+const handleEditTodo = async (event: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLButtonElement> ) => {
+
+      //new title for the todo
+      const newTitle = todoRef.current?.value;
+      const todoId = editRef.current?.innerText;
+
+      console.log(newTitle, todoId)
+
+      editTodo(todoId!, newTitle!);
+
+      // //fetch todos again to update the UI in the background
+      // fetchTodos();
+
+      //set state of todos and update the UI
+      setTodos((prevTodos) => prevTodos.map((todo) => {
+        if (todo.id === todoId) {
+          return {
+            ...todo,
+            title: newTitle,
+          };
+        }
+        return todo;
+      }).filter((todo) => todo.title !== undefined) as Todo[]);
+
+
+      
+
+
+
+
+      
+
+      //close modal
+      CloseEditModal();
+
+      //clear input
+      setTimeout(() => {
+        toast.success('Todo edited!');
+
+        if(todoRef.current) {
+          todoRef.current.value = '';
+        }
+      }
+      , 100)
+
+}
+
+//Toogle todo
+const toggleTodo = async (id: string, completed: boolean) => {
+  await fetch(`/api/todos`, {
+    method: 'PUT',
+    // Adding headers
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    // Adding body or contents to send
+    body: JSON.stringify({
+      id,
+      completed: !completed,
+    }),
+  });
+};
+
+const handleToggleTodo = async (id: string, completed: boolean) => {
+
+  toggleTodo(id, completed);
+
+  //set state of todos and update the UI
+  setTodos(todos.map((todo) => {
+    if (todo.id === id) {
+      return {
+        ...todo,
+        completed: !completed,
+      };
+    }
+    return todo;
+  }));
+
+
+  setTimeout(() => {
+    toast.success('Todo updated!');
+  }, 100)
+
+
+}
+
+
+
+
 
 
 
@@ -210,18 +391,19 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
 
   return (
     <>
+   <Toaster />
     <div className="bg-slate-100 w-full h-[100%] min-h-screen lg:px-10 px-4">
-      <div className='mx-auto my-0 lg:w-3/6 md:w-4/5 sm:w-full p-6'>
+      <div className='mx-auto my-0 lg:w-3/6 md:w-4/5 sm:w-full py-10'>
         <div className="flex flex-col items-center">
 
           <div className='flex justify-between w-full items-center h-10 mb-10'>
             
             <div className='h-full flex items-center text-2xl font-semibold'>
-              <h1 className="">Todos</h1>
+              <h1 className="">Striver</h1>
             </div>
 
             <div>
-              <button className="bg-blue-500 hover:bg-blue-500 text-white font-light py-2 px-4 rounded " onClick={handleOpenTodoModal}> 
+              <button className="bg-purple-500 hover:bg-purple-900 text-white font-light py-4 px-6 rounded " onClick={handleOpenTodoModal}> 
                 Add Todo 
               </button>
             </div>
@@ -234,28 +416,59 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
 
             {empty && <div className="text-center">{empty}</div>   }
             <ul className="w-full" ref={todosRef}>
-              {todos.map((todo) => (
-             <li key={todo.id} className={` p-4 rounded-md mb-2 ${todo.completed ? 'bg-green-300' : 'bg-gray-300'}`}>
 
-                <div className='grid grid-cols-6'>
+              {/* //slice to reverse the array to show new todo at the top  */}
+            {todos.slice().reverse().map((todo) => (
+             <li key={todo.id} className={`p-4 rounded-md mb-2 ${todo.completed ? 'bg-green-300' : 'bg-gray-300'}`}>
 
-                    <div className=' line-clamp-2 flex items-center col-span-4'> 
-                    {todo.title} 
-                    </div>
+                <div className='grid grid-cols-8 gap-1'>
 
-                    <div className='col-span-2 flex items-center justify-end bg-red-100'> 
 
-                      <button className="mx-1 text-white p-4 bg-red-500 rounded" onClick={() => deleteTodo(todo.id)}>
-                            Delete
+                  <div className='flex col-span-6 gap-2'>
+
+                      <div className='col-span-1 flex items-center justify-center'>
+
+                        {todo.completed ? 
+                        <div> 
+
+                        <div className='bg-green-600 flex p-2 items-center justify-center h-7 w-7 rounded-full' onClick={() => handleToggleTodo(todo.id, todo.completed)} role='button' title="Mark Uncompleted">
+                        <Image src='/icons/check.svg' alt='delete' width={20} height={20} /> 
+                        </div>
+
+                        </div> : 
+                        
+                        
+                        <div> 
+                         <div className='bg-blue-50 flex items-center justify-center h-6 w-6 rounded-full' onClick={() => handleToggleTodo(todo.id, todo.completed)} role='button' title="Mark Completed">
+                        
+                        </div>
+                          
+                        </div>}
+
+                        
+                      </div>
+
+                      <div className='w-full flex items-center break-all'>
+                      {todo.title} 
+                      </div>
+
+                  </div>
+
+                  <div className=' col-span-2 flex justify-end items-center'>
+
+                      <button className="mx-1 text-white p-2 bg-red-300 hover:bg-red-400 rounded-full flex items-center" onClick={() => deleteTodo(todo.id)} title="Delete todo?" >
+                        <Image src='/icons/trash.svg' alt='delete' width={20} height={20} />
                       </button>
 
-                      <button className='bg-blue-500 p-4 rounded'>
-                        Edit
+                      <button className="mx-1 text-white p-2 bg-teal-400 hover:bg-teal-500 rounded-full flex items-center" onClick={() => handleOpenEditModal(todo.id, todo.title)} title="Edit todo?">
+                        <Image src='/icons/pencil.svg' alt='delete' width={20} height={20} />
                       </button>
 
-                    </div>
+                  </div>
 
-                  </div> 
+
+
+                </div> 
 
                 </li>
               ))}
@@ -277,20 +490,44 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
         {isModalOpen && (
           <div >
 
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} isClicked={handleCloseModal} title={"Add A New Todo"}>
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} isClicked={handleCloseModal} title={"Add A New Todo"}>
 
-          <input type="text" className='border-2 border-gray-300 text-gray-900 w-full h-12 px-2 rounded-md mb-4 focus:ring-0 focus:outline-none focus:border-2
-           focus:border-purple-500' placeholder='Add Todo' ref={todoRef} onKeyDown={enterAddTodo} />
+              <input type="text" className='border-2 border-gray-300 text-gray-900 w-full h-12 px-2 rounded-md mb-4 focus:ring-0 focus:outline-none focus:border-2
+              focus:border-purple-500' placeholder='Add Todo' ref={todoRef} onKeyDown={enterAddTodo} />
 
-          <button className='bg-purple-500 hover:bg-purple-900 text-white font-light py-4 px-4 rounded-md w-full' onClick={clickAddTodo}>
-            Add Todo 
-          </button>
+              <button className='bg-purple-500 hover:bg-purple-900 text-white font-light py-4 px-4 rounded-md w-full' onClick={clickAddTodo}>
+                Add Todo 
+              </button>
 
-          {/* <button className='' onClick={handleFocus}> Focus </button> */}
+              {/* <button className='' onClick={handleFocus}> Focus </button> */}
 
-          <button className='absolute top-2 right-2 grid place-items-center bg-slate-200 rounded-full h-8 w-8 text-sm hover:bg-slate-600 hover:text-white' onClick={handleCloseModal}> X </button>
-          
-        </Modal>
+              <button className='absolute top-2 right-2 grid place-items-center bg-slate-200 rounded-full h-8 w-8 text-sm hover:bg-slate-600 hover:text-white' onClick={handleCloseModal}> X </button>
+              
+            </Modal>
+
+          </div>
+        )}
+
+        {isEditModalOpen && (
+          <div >
+
+            <Modal isOpen={isEditModalOpen} onClose={handleCloseModal} isClicked={CloseEditModal} title={"Edit Todo"} >
+
+              <div ref={editRef} hidden> 
+
+              </div>
+
+              <input type="text" className='border-2 border-gray-300 text-gray-900 w-full h-12 px-2 rounded-md mb-4 focus:ring-0 focus:outline-none focus:border-2
+              focus:border-purple-500' placeholder='Add Todo' ref={todoRef}/>
+
+
+              <button className='bg-purple-500 hover:bg-purple-900 text-white font-light py-4 px-4 rounded-md w-full' onClick={handleEditTodo}>
+               Edit Todo
+              </button>
+
+              <button className='absolute top-2 right-2 grid place-items-center bg-slate-200 rounded-full h-8 w-8 text-sm hover:bg-slate-600 hover:text-white' onClick={CloseEditModal}> X </button>
+              
+            </Modal>
 
           </div>
         )}
