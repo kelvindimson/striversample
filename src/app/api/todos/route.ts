@@ -73,7 +73,11 @@ export async function POST(req: NextRequest, res: NextResponse) {
                     db.close();
 
                     //return the new todo object
-                    return NextResponse.json(newTodo);
+                    return NextResponse.json({todo: newTodo,
+                        message: "Todo added successfully",
+                        status: 200,
+                        success: true
+                    });
 
         }
     } catch (error) {
@@ -115,7 +119,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
         db.close();
 
         // Return the todos array
-        return NextResponse.json(todos);
+        return NextResponse.json(todos, { status: 200 });
 
     } catch (error) {
         return NextResponse.json({
@@ -132,16 +136,20 @@ export async function DELETE(req: NextRequest, res: NextResponse) {
         if (req.method !== "DELETE") {
             return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
         }
-
+        
+        // Get the ID from the request body
         const { id }: Partial<Todo> = await req.json();
 
+        // Return an error if the ID is not provided
         if (!id) {
             return NextResponse.json({ Message: "ID is required" }, { status: 400 });
         }
 
+        // Open a connection to the SQLite database
         const db = new sqlite3.Database(dbPath);
         const deleteSQL = `DELETE FROM todos WHERE id = ?`;
 
+        // Await the promise to resolve before closing the database connection
         await new Promise<void>((resolve, reject) => {
             db.run(deleteSQL, [id], function (err) {
                 if (err) {
@@ -152,9 +160,15 @@ export async function DELETE(req: NextRequest, res: NextResponse) {
             });
         });
 
+        // Close the database connection after the query is run
         db.close();
 
-        return NextResponse.json({ message: "Todo deleted successfully" });
+        return NextResponse.json({ 
+        message: "Todo deleted successfully", 
+        status: 200, 
+        success: true 
+    });
+
     } catch (error) {
         return NextResponse.json({
             status: 400,
@@ -166,19 +180,27 @@ export async function DELETE(req: NextRequest, res: NextResponse) {
 
 // UPDATE endpoint to update a todo by ID
 export async function PUT(req: NextRequest, res: NextResponse) {
+
+    // Try catch block to catch any errors
     try {
+
+        // Return an error if the method is not PUT
         if (req.method !== "PUT") {
             return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
         }
 
+        // Get the ID from the request body
         const { id, title, completed }: Partial<Todo> = await req.json();
 
+        // Return an error if the ID is not provided
         if (!id) {
             return NextResponse.json({ Message: "ID is required" }, { status: 400 });
         }
 
+        // Open a connection to the SQLite database
         const db = new sqlite3.Database(dbPath);
 
+        // SQL query to update the todo in the database
         const updateSQL = `UPDATE todos
                            SET title = COALESCE(?, title),
                                completed = COALESCE(?, completed),
@@ -187,6 +209,7 @@ export async function PUT(req: NextRequest, res: NextResponse) {
 
         const timestamp = new Date().toISOString();
 
+        // Await the promise to resolve before closing the database connection
         await new Promise<void>((resolve, reject) => {
             db.run(updateSQL, [title, completed, timestamp, id], function (err) {
                 if (err) {
@@ -197,8 +220,10 @@ export async function PUT(req: NextRequest, res: NextResponse) {
             });
         });
 
+        // SQL query to fetch the updated todo from the database
         const fetchSQL = `SELECT * FROM todos WHERE id = ?`;
 
+        // Await the promise to resolve before closing the database connection
         const updatedTodo: Todo = await new Promise<Todo>((resolve, reject) => {
             db.get(fetchSQL, [id], (err, row) => {
                 if (err) {
@@ -209,9 +234,10 @@ export async function PUT(req: NextRequest, res: NextResponse) {
             });
         });
 
+        // Close the database connection after the query is run
         db.close();
 
-    return NextResponse.json(updatedTodo);
+    return NextResponse.json(updatedTodo, { status: 200 });
 
     } catch (error) {
 
