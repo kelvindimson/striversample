@@ -14,7 +14,7 @@ interface Todo {
   completed: boolean;
 }
 
-const HomeOne = (props: Todo) => {
+const HomeOne = () => {
 
 // const router: NextRouter = useRouter();
 const [loading , setLoading] = useState(true)
