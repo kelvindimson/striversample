@@ -193,19 +193,6 @@ const handleEditModalClose = (event: React.KeyboardEvent<HTMLDivElement>) => {
 }};
 
 
-
-
-// const handleOpenTodoModal = () => {
-//   setIsModalOpen(true);
-
-//   if(todoRef.current) {
-//     todoRef.current.focus();
-//   }
-  
-// }
-
-
-
 //focus on input
 const handleFocus = () => {
   //check to make sure the input is not null
