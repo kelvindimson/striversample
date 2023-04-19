@@ -415,7 +415,7 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
                         {todo.completed ? 
                         <div> 
 
-                        <div className='bg-green-600 flex p-2 items-center justify-center h-7 w-7 rounded-full' onClick={() => handleToggleTodo(todo.id, todo.completed)} role='button' title="Mark Uncompleted">
+                        <div className='bg-green-600 flex p-2 items-center justify-center h-6 w-6 rounded-full' onClick={() => handleToggleTodo(todo.id, todo.completed)} role='button' title="Mark Uncompleted">
                         <Image src='/icons/check.svg' alt='delete' width={20} height={20} /> 
                         </div>
 
@@ -470,7 +470,7 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
       </div>
 
     </div>
-      <div className="bg-slate-900 h-24 w-full">
+      <div className="bg-slate-900 h-24 text-white w-full flex items-center p-4 justify-center">
         {isModalOpen && (
           <div >
 
@@ -517,7 +517,12 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
         )}
 
 
-        Footer
+       <div className=''>
+        
+        &copy; 2023 Striver Todo by Kelvin Dim
+
+        </div> 
+        
         
         
       </div>  
