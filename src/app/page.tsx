@@ -470,7 +470,7 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
       </div>
 
     </div>
-      <div className="bg-slate-900 h-24 text-white w-full flex items-center p-4 justify-center">
+      <div className="bg-slate-900 h-24  w-full flex items-center p-4 justify-center">
         {isModalOpen && (
           <div >
 
@@ -517,7 +517,7 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
         )}
 
 
-       <div className=''>
+       <div className='text-white'>
         
         &copy; 2023 Striver Todo by Kelvin Dim
 
