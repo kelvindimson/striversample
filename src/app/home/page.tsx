@@ -14,7 +14,7 @@ export interface Todo {
   completed: boolean;
 }
 
-const Home = (props: Todo) => {
+const HomeOne = (props: Todo) => {
 
 // const router: NextRouter = useRouter();
 const [loading , setLoading] = useState(true)
@@ -541,4 +541,4 @@ const [todosRef] = useAutoAnimate<HTMLElement>();
   )
 }
 
-export default Home
+export default HomeOne
