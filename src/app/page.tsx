@@ -1,6 +1,7 @@
 "use client"; // this is a client component
 
 import React, {useEffect, useState} from 'react'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 
 export interface Todo {
   id: number;
@@ -23,8 +24,10 @@ useEffect(() => {
   fetchTodos();
 }, []);
 
+const [todosRef] = useAutoAnimate<HTMLElement>();
+
   return (
-    <div className="bg-slate-100 w-full h-screen px-10 ">
+    <div className="bg-slate-100 w-full h-screen lg:px-10 px-4">
       <div className='mx-auto my-0 lg:w-3/6 md:w-4/5 sm:w-full p-6'>
         <div className="flex flex-col items-center">
 
@@ -41,10 +44,22 @@ useEffect(() => {
 
           <div className="w-full">
 
-            <ul className="w-full">
+            <ul className="w-full" ref={todosRef}>
             {todos.map((todo) => (
-              <li key={todo.id} className={`p-4 rounded-md mb-2 ${todo.completed ? 'bg-green-300' : 'bg-gray-300'}`}>
-                <span>{todo.title}</span>
+              <li key={todo.id} className={` p-4 rounded-md mb-2 ${todo.completed ? 'bg-green-300' : 'bg-gray-300'}`}>
+
+               <div className='grid grid-cols-6'>
+
+                  <div className='bg-red-500 line-clamp-2 flex items-center col-span-4'> 
+                  {todo.title} 
+                  </div>
+
+                  <div className='col-span-2 flex items-center bg-purple-500 right-0 text-right'> 
+                  Edit |  Delete  | Complete
+                  </div>
+
+                </div> 
+
               </li>
             ))}
           </ul>
